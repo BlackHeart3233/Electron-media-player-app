@@ -2,7 +2,7 @@
   "name": "electron_3_sklop",
   "version": "1.0.0",
   "description": "A simple Electron app to manage a media library",
-  "license": "ISC",
+  "license": "MIT",
   "author": "BlackHeart323",
   "type": "commonjs",
   "main": "index.js",
