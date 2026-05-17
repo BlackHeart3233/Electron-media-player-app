@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<meta
+    http-equiv="Content-Security-Policy"
+    content="
+        default-src 'self';
+        script-src 'self';
+        style-src 'self';
+        img-src 'self' app:;
+        media-src 'self' app:;
+    "
+>
+<link rel="stylesheet" href="addMedia_light.css" id="theme_id_addMedia">
+<body>
+
+<h1>Add new media</h1>
+<form>
+    <label>Please select a JSON file:</label>
+    <input
+        type="file"
+        accept="application/json"
+        id="json_file"
+        name="json_file"
+    >
+    <br><br>
+    <label id="error_add_media"></label>
+    <button type="button" id="submit_add_media">
+        Submit
+    </button>
+</form>
+</body>
+<script src="renderer.js"></script>
+</html>

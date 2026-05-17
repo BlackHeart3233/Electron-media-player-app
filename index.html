@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="sl">
+<head>
+<meta
+    http-equiv="Content-Security-Policy"
+    content="
+        default-src 'self';
+        script-src 'self';
+        style-src 'self';
+        img-src 'self' app:;
+        media-src 'self' app:;
+    "
+>
+<link id="theme_id" rel="stylesheet" href="index_light.css">
+<title>Media Player</title>
+</head>
+<body>
+<div class="container">
+    <div class="sidebar">
+        <div class="search">
+            <input
+                type="text"
+                id="search_input"
+                placeholder="Find what you are looking for..."
+            >
+            <select id="search_type">
+                <option value="title">Naslov</option>
+                <option value="Author">Avtor</option>
+                <option value="year">Letnik</option>
+            </select>
+            <label>
+                <input type="checkbox" id="search_exact">
+                Exact
+            </label>
+
+            <select id="sort_type">
+                <option value="none">
+                    No sorting
+                </option>
+                <option value="title">
+                    Sort by title
+                </option>
+                <option value="Author">
+                    Sort by author
+                </option>
+                <option value="year">
+                    Sort by year
+                </option>
+            </select>
+            <select id="sort_direction">
+                <option value="asc">
+                    Ascending
+                </option>
+                <option value="desc">
+                    Descending
+                </option>
+            </select>
+        </div>
+        <div id="media-container"></div>
+    </div>
+    <div class="content">
+        <div class="settings">
+            <button
+                class="settings_button"
+                id="setting_BTN"
+            >
+                Nastavitve
+            </button>
+            <button
+                class="settings_button"
+                id="add_media_BTN"
+            >
+                Naloži podatke
+            </button>
+        </div>
+
+        <div class="video-box">
+            <video id="video-player"></video>
+        </div>
+        <div class="title"></div>
+        <div class="author"></div>
+        <div class="length"></div>
+        <input type="range" class="progress">
+        <div class="controls">
+            <button id="repeat-btn" value="0">🔁</button>
+            <button id="prev-btn" >⏮</button>
+            <button id="play-btn">▶</button>
+            <button id="next-btn">⏭</button>
+            <button id="shuffle-btn" value="0">🔀</button>
+        </div>
+    </div>
+</div>
+
+<script src="renderer.js"></script>
+
+</body>
+</html>
