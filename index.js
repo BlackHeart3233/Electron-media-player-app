@@ -313,7 +313,7 @@ async function sendAudioToTranscription(){
             ),
             model: 'whisper-1'
         })*/
-    const transcription = await client.audio.transcriptions.create({
+    let transcription = await client.audio.transcriptions.create({
             file: fs.createReadStream(
                 'voice.wav'
             ),
@@ -341,13 +341,20 @@ async function sendAudioToTranscription(){
         win.webContents.send('showCommands', currentShownCommands)
         await sleep(4000)
         await recordVoice()
-        transcription.text = "dark"
+        let transcription = await client.audio.transcriptions.create({
+            file: fs.createReadStream(
+                'voice.wav'
+            ),
+            model: 'whisper-1'
+        })
         if(transcription.text.toLowerCase().includes("dark")){
             currentTheme = 'dark'   
         }else if(transcription.text.toLowerCase().includes("light")){
             currentTheme = 'light'
         }else{
             win.webContents.send('onAlert', "Choice not recognized, theme unchanged. U said: " + transcription.text)
+            currentShownCommands = ["play", "pause", "next", "back", "change theme"]
+            win.webContents.send('showCommands', currentShownCommands)
             return
         }
         //console.log(`Changing theme to ${currentTheme}`)
