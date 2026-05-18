@@ -9,3 +9,7 @@ node_modules/
 
 out/
 Electron_3_sklop_Haložan.zip
+*.zip
+
+#apiKey
+apiKey.txt

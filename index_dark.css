@@ -200,3 +200,31 @@ video {
   background: #4a90e2;
   color: white;
 }
+.voice_commands{
+    padding: 10px;
+    border-top: 1px solid #2f2f2f;
+    border-bottom: 1px solid #2f2f2f;
+    background: #1e1e1e;
+}
+
+.voice_title{
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: white;
+}
+
+.voice_command{
+    padding: 8px 10px;
+    margin-top: 8px;
+    border-radius: 10px;
+    background: #2a2a2a;
+    color: #60a5fa;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.voice_command:hover{
+    background: #2563eb;
+    color: white;
+}

@@ -16,8 +16,18 @@ const prevBtn = document.getElementById('prev-btn')
 const playBtn = document.getElementById('play-btn')
 const nextBtn = document.getElementById('next-btn')
 const shuffleBtn = document.getElementById('shuffle-btn')
+const speechBtn = document.getElementById('speech_BTN')
 
 let currentIndex = 0
+
+if(speechBtn){
+
+    speechBtn.addEventListener('click', () => {
+
+        window.AppAPI.startVoiceRecognition()
+    })
+}
+
 
 if(playBtn){
     playBtn.addEventListener('click', () => {
@@ -117,9 +127,6 @@ if(dark_btn){
     window.AppAPI.log("Dark button found in renderer")
 
     dark_btn.addEventListener('click', () => {
-
-        console.log("Dark clicked")
-
         window.AppAPI.changeTheme('dark')
     })
 }
@@ -171,7 +178,7 @@ if(add_media_submit_btn){
             reader.readAsText(file)
         }else{
             errorLabel_addMedia.textContent = "Please select a JSON file";
-            console.log("No file selected")
+            window.AppAPI.log("No file selected")
         }
     })
 }
@@ -235,6 +242,7 @@ window.electronAPI.onMediaData((event, mediaData) => {
                 item.classList.remove('active')
             })
             mediaItem.classList.add('active')
+            window.AppAPI.changeIndex(currentIndex)
             playMedia(media)
         })
         container.appendChild(mediaItem)
@@ -249,7 +257,7 @@ function playMedia(media){
     author.textContent = media.Author
     videoPlayer.src = `app://${media.streamPath}`
     window.AppAPI.log(`app://${media.streamPath}`)
-    console.log("Playing media:", videoPlayer.src)
+    window.AppAPI.log("Playing media:", videoPlayer.src)
     videoPlayer.play()
     videoPlayer.onloadedmetadata = () => {
         const duration = videoPlayer.duration
@@ -269,4 +277,42 @@ window.electronAPI.onPlayNextMedia((event, media, index) => {
         activeItem.classList.add('active')
     }
     playMedia(media)
+})
+
+window.electronAPI.VoiceCommand((command) => {
+    window.AppAPI.log("Received voice command in renderer:", command)
+    if(command === 'play'){
+        if(videoPlayer.src){
+            if(videoPlayer.paused){
+                window.AppAPI.log("play command received")
+                videoPlayer.play()
+            }
+        }
+    }else if(command === 'pause'){
+        if(videoPlayer.src){
+            window.AppAPI.log("pause command received")
+            videoPlayer.pause()
+        }
+    }else if(command === 'next'){
+        window.AppAPI.log("next command received")
+        window.AppAPI.playNext(currentIndex)
+    }else if(command === 'back'){
+         window.AppAPI.log("back command received")
+        window.AppAPI.playPrev(currentIndex)
+    }
+})
+
+window.electronAPI.onAlert((message) => {
+    alert(message)
+})
+
+window.electronAPI.showCommands((commands) => {
+    const commandsContainer = document.getElementById('commands_container')
+    commandsContainer.innerHTML = ""
+    commands.forEach(element => {
+        const commandItem = document.createElement('div')
+        commandItem.classList.add('command-item')
+        commandItem.textContent = "🎤 "+element
+        commandsContainer.appendChild(commandItem)
+    });
 })

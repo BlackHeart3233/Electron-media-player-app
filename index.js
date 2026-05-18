@@ -1,12 +1,35 @@
+globalThis.File =require('node:buffer').File
 const {app, BrowserWindow, ipcMain, protocol} = require('electron')
 const path = require('path')
 const fs = require('fs')
+const record = require('node-record-lpcm16')
+const OpenAI = require('openai')
+let client
+let recording
 let mediaLibrary = []
+let currentShownCommands = ["play", "pause", "next", "back", "change theme"]
 let win
 let settingsWindow
 let addMediaWindow
 let currentTheme = 'light'
 let shownResults = []
+let currentIndex = 0
+let keyApiValue = ""
+
+async function init() {
+  try {
+    const data = await fs.promises.readFile('apiKey.txt', 'utf8')
+    keyApiValue = data.trim()
+    //console.log("API key loaded:", keyApiValue)
+    client = new OpenAI({
+        apiKey: keyApiValue
+    })
+  } catch (err) {
+    console.error("Error reading API key from file:", err)
+  }
+}
+init()
+
 
 protocol.registerSchemesAsPrivileged([
     {
@@ -41,19 +64,20 @@ async function  loadMediaLibrary(){
     }
 }
 
-
-
-const createWindow = () =>{
+const createWindow = () => {
     win = new BrowserWindow({
-        width:1200,
-        height:700,
-        minWidth:800,
-        minHeight:400,
-        webPreferences:{
-            preload: path.join(__dirname,"preload.js")
+        width: 1200,
+        height: 700,
+        minWidth: 800,
+        minHeight: 400,
+        webPreferences: {
+            preload: path.join(__dirname, "preload.js")
         }
     })
     win.loadFile('index.html')
+    win.webContents.on('did-finish-load', () => {
+        win.webContents.send('showCommands', currentShownCommands)
+    })
 }
 
 function createSettingsWindow(){
@@ -156,6 +180,10 @@ ipcMain.on('log', (event, message) =>{
     console.log("Log from renderer:", message)
 })
 
+ipcMain.on('changeIndex', (event, index) =>{
+    currentIndex = index
+})
+
 ipcMain.on('addMediaToLibrary', (event, mediaData) =>{
     mediaLibrary.push(...mediaData)
     shownResults = mediaLibrary
@@ -227,6 +255,7 @@ ipcMain.on('playNext', (event, currentIndex) => {
     if(nextIndex >= shownResults.length){
         nextIndex = 0
     }
+    currentIndex = nextIndex
     event.reply(
     'play-next-media',
     shownResults[nextIndex],
@@ -242,5 +271,99 @@ ipcMain.on('playPrev', (event, currentIndex) => {
     if(prevIndex < 0){
         prevIndex = shownResults.length - 1
     }
+    currentIndex = prevIndex
     event.reply('play-next-media',shownResults[prevIndex], prevIndex)
 })
+const { exec } =
+    require('child_process')
+
+ipcMain.on('startVoiceRecognition',async () => {
+        await recordVoice()
+        await sendAudioToTranscription()
+})
+
+function recordVoice(){
+    return new Promise((resolve, reject) => {
+        console.log("Recording...")
+        exec(
+            'sox -t waveaudio default voice.wav trim 0 3',
+            (error) => {
+                if(error){
+                    console.log(error)
+                    reject(error)
+                    return
+                }
+                console.log(
+                    "Recording stopped"
+                )
+                resolve()
+            }
+        )
+    })
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function sendAudioToTranscription(){
+    /*const transcription = await client.audio.transcriptions.create({
+            file: fs.createReadStream(
+                './voice_commands/pause_command.mp3'
+            ),
+            model: 'whisper-1'
+        })*/
+    const transcription = await client.audio.transcriptions.create({
+            file: fs.createReadStream(
+                'voice.wav'
+            ),
+            model: 'whisper-1'
+        })
+    /*const transcription = {
+        text: "change theme to dark"
+    }*/
+    //console.log("Transcription: " + transcription.text)
+    if(transcription.text.toLowerCase().includes("play")){
+        win.webContents.send('VoiceCommand','play',currentIndex)
+        win.webContents.send('onAlert', `Play command recognized, playing media`)
+    }else if(transcription.text.toLowerCase().includes("pause")){
+        win.webContents.send('VoiceCommand','pause',currentIndex)
+        win.webContents.send('onAlert', `Pause command recognized, pausing media`)
+    }else if(transcription.text.toLowerCase().includes("next")){
+        win.webContents.send('VoiceCommand','next',currentIndex)
+        win.webContents.send('onAlert', `Next command recognized, going to next media`)
+    }else if(transcription.text.toLowerCase().includes("back")){
+        win.webContents.send('VoiceCommand','back',currentIndex)
+        win.webContents.send('onAlert', `Back command recognized, going to previous media`)
+    }else if(transcription.text.toLowerCase().includes("change theme")){
+        win.webContents.send('onAlert', "Listening for theme choice (3 seconds)... dark or light")
+        currentShownCommands = ["dark", "light"]
+        win.webContents.send('showCommands', currentShownCommands)
+        await sleep(4000)
+        await recordVoice()
+        transcription.text = "dark"
+        if(transcription.text.toLowerCase().includes("dark")){
+            currentTheme = 'dark'   
+        }else if(transcription.text.toLowerCase().includes("light")){
+            currentTheme = 'light'
+        }else{
+            win.webContents.send('onAlert', "Choice not recognized, theme unchanged. U said: " + transcription.text)
+            return
+        }
+        //console.log(`Changing theme to ${currentTheme}`)
+        win.webContents.send('themeChanged', currentTheme)
+        if(settingsWindow){
+            settingsWindow.webContents.send('themeChanged', currentTheme)
+        }
+        if(addMediaWindow){
+            addMediaWindow.webContents.send('themeChanged', currentTheme)
+        }
+        currentShownCommands = ["play", "pause", "next", "back", "change theme"]
+        win.webContents.send('onAlert', `Theme changed successfully to ${currentTheme}`)
+        win.webContents.send('showCommands', currentShownCommands)
+    }else{
+        win.webContents.send('onAlert', "Voice command not recognized. U said: " + transcription.text)
+    }
+
+}
+

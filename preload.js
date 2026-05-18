@@ -35,12 +35,30 @@ contextBridge.exposeInMainWorld('AppAPI',{
     },
     playPrev: (currentIndex) => {
         ipcRenderer.send('playPrev',currentIndex)
+    },
+    startVoiceRecognition: () => {
+        ipcRenderer.send('startVoiceRecognition')
+    },
+    changeIndex: (index) => {
+        ipcRenderer.send('changeIndex', index)
     }
 
 })
 
 contextBridge.exposeInMainWorld("electronAPI", {
     onMediaData: (callback) => ipcRenderer.on("media-data", callback),
-    onPlayNextMedia: (callback) =>ipcRenderer.on("play-next-media", callback)
+    onPlayNextMedia: (callback) =>ipcRenderer.on("play-next-media", callback),
+    VoiceCommand: (callback) => {
+        ipcRenderer.on("VoiceCommand",(event, command) => {callback(command)})
+    },
+    onAlert: (callback) => {
+        ipcRenderer.on('onAlert', (event, message) => {
+            callback(message)
+        })
+    },
+    showCommands: (callback) => {
+        ipcRenderer.on('showCommands', (event, commands) => {
+            callback(commands)
+    })}
 });
 
