@@ -306,6 +306,25 @@ ipcMain.on('startVoiceRecognition',async () => {
         await sendAudioToTranscription()
 })
 
+ipcMain.on(
+    'deleteSpeech',
+    async (event, fileName) => {
+        setTimeout(async () => {
+            try {
+                await fs.promises.unlink(
+                    fileName
+                )
+                console.log(
+                    'Deleted speech:',
+                    fileName
+                )
+            } catch(err) {
+                console.error(err)
+            }
+        }, 2000)
+    }
+)
+
 function recordVoice(){
     return new Promise((resolve, reject) => {
         console.log("Recording...")

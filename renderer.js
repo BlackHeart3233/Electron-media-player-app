@@ -330,5 +330,8 @@ window.electronAPI.onPlaySpeech(
                 "Speech finished"
             )
         }
+        window.AppAPI.deleteSpeech(
+                fileName
+        )
     }
 )

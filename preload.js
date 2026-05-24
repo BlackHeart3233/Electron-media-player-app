@@ -41,6 +41,9 @@ contextBridge.exposeInMainWorld('AppAPI',{
     },
     changeIndex: (index) => {
         ipcRenderer.send('changeIndex', index)
+    },
+    deleteSpeech: (fileName) => {
+    ipcRenderer.send('deleteSpeech',fileName)
     }
 
 })
