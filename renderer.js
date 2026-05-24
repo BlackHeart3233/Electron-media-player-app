@@ -316,3 +316,19 @@ window.electronAPI.showCommands((commands) => {
         commandsContainer.appendChild(commandItem)
     });
 })
+
+window.electronAPI.onPlaySpeech(
+    (fileName) => {
+        const audio = new Audio(
+            `app://${fileName}`
+        )
+        audio.play().catch(err => {
+            console.error(err)
+        })
+        audio.onended = () => {
+            window.AppAPI.log(
+                "Speech finished"
+            )
+        }
+    }
+)

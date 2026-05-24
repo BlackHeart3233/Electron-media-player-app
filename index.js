@@ -277,6 +277,30 @@ ipcMain.on('playPrev', (event, currentIndex) => {
 const { exec } =
     require('child_process')
 
+async function speak(text) {
+
+    const response =
+        await client.audio.speech.create({
+            model: 'gpt-4o-mini-tts',
+            voice: 'alloy',
+            input: text
+        })
+
+    const buffer = Buffer.from(
+        await response.arrayBuffer()
+    )
+
+    const fileName =
+        `speech-${Date.now()}.mp3`
+
+    fs.writeFileSync(fileName, buffer)
+
+    win.webContents.send(
+        'playSpeech',
+        fileName
+    )
+}
+
 ipcMain.on('startVoiceRecognition',async () => {
         await recordVoice()
         await sendAudioToTranscription()
@@ -313,46 +337,53 @@ async function sendAudioToTranscription(){
             ),
             model: 'whisper-1'
         })*/
-    let transcription = await client.audio.transcriptions.create({
-            file: fs.createReadStream(
-                'voice.wav'
-            ),
-            model: 'whisper-1'
-        })
+    const transcription = await client.audio.transcriptions.create({
+        file: fs.createReadStream('voice.wav'),
+        model: 'whisper-1',
+        language: 'en',
+        prompt: 'Voice commands: play, pause, next, back, change theme'
+    });
     /*const transcription = {
         text: "change theme to dark"
     }*/
-    //console.log("Transcription: " + transcription.text)
+    console.log("Transcription: " + transcription.text)
     if(transcription.text.toLowerCase().includes("play")){
         win.webContents.send('VoiceCommand','play',currentIndex)
-        win.webContents.send('onAlert', `Play command recognized, playing media`)
+        await speak('Play command recognized, playing media')
+        //win.webContents.send('onAlert', `Play command recognized, playing media`)
     }else if(transcription.text.toLowerCase().includes("pause")){
         win.webContents.send('VoiceCommand','pause',currentIndex)
-        win.webContents.send('onAlert', `Pause command recognized, pausing media`)
+        await speak('Pause command recognized, pausing media')
+        //win.webContents.send('onAlert', `Pause command recognized, pausing media`)
     }else if(transcription.text.toLowerCase().includes("next")){
         win.webContents.send('VoiceCommand','next',currentIndex)
-        win.webContents.send('onAlert', `Next command recognized, going to next media`)
+        await speak('Next command recognized, going to next media')
+        //win.webContents.send('onAlert', `Next command recognized, going to next media`)
     }else if(transcription.text.toLowerCase().includes("back")){
         win.webContents.send('VoiceCommand','back',currentIndex)
-        win.webContents.send('onAlert', `Back command recognized, going to previous media`)
+        await speak('Back command recognized, going to previous media')
+        //win.webContents.send('onAlert', `Back command recognized, going to previous media`)
     }else if(transcription.text.toLowerCase().includes("change theme")){
-        win.webContents.send('onAlert', "Listening for theme choice (3 seconds)... dark or light")
+        //win.webContents.send('onAlert', "Listening for theme choice (3 seconds)... dark or light")
+        await speak('Listening for theme choice (3 seconds)... dark or light')
         currentShownCommands = ["dark", "light"]
         win.webContents.send('showCommands', currentShownCommands)
-        await sleep(4000)
         await recordVoice()
         let transcription = await client.audio.transcriptions.create({
             file: fs.createReadStream(
                 'voice.wav'
             ),
-            model: 'whisper-1'
+            model: 'whisper-1',
+            language: 'en',
+            prompt: 'Voice commands: dark, light'
         })
         if(transcription.text.toLowerCase().includes("dark")){
             currentTheme = 'dark'   
         }else if(transcription.text.toLowerCase().includes("light")){
             currentTheme = 'light'
         }else{
-            win.webContents.send('onAlert', "Choice not recognized, theme unchanged. U said: " + transcription.text)
+            await speak('Choice not recognized, theme unchanged. U said: ' + transcription.text)
+            //win.webContents.send('onAlert', "Choice not recognized, theme unchanged. U said: " + transcription.text)
             currentShownCommands = ["play", "pause", "next", "back", "change theme"]
             win.webContents.send('showCommands', currentShownCommands)
             return
@@ -366,10 +397,12 @@ async function sendAudioToTranscription(){
             addMediaWindow.webContents.send('themeChanged', currentTheme)
         }
         currentShownCommands = ["play", "pause", "next", "back", "change theme"]
-        win.webContents.send('onAlert', `Theme changed successfully to ${currentTheme}`)
+        //win.webContents.send('onAlert', `Theme changed successfully to ${currentTheme}`)
+        await speak(`Theme changed successfully to ${currentTheme}`)
         win.webContents.send('showCommands', currentShownCommands)
     }else{
-        win.webContents.send('onAlert', "Voice command not recognized. U said: " + transcription.text)
+        //win.webContents.send('onAlert', "Voice command not recognized. U said: " + transcription.text)
+        await speak("Voice command not recognized. U said: " + transcription.text)
     }
 
 }

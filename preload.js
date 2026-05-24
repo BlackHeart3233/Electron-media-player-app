@@ -59,6 +59,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
     showCommands: (callback) => {
         ipcRenderer.on('showCommands', (event, commands) => {
             callback(commands)
-    })}
+    })},
+    onPlaySpeech: (callback) =>
+            ipcRenderer.on('playSpeech',(event, fileName) =>
+                    callback(fileName)
+            )
 });
 

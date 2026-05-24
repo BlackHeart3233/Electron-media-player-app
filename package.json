@@ -29,6 +29,7 @@
     "electron-squirrel-startup": "^1.0.1",
     "mic": "^2.1.2",
     "node-record-lpcm16": "^1.0.1",
-    "openai": "^6.38.0"
+    "openai": "^6.38.0",
+    "play-sound": "^1.1.6"
   }
 }
