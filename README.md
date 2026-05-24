@@ -1,6 +1,6 @@
 # Electron Media Player App
 
-Desktop multimedia player built with Electron featuring media playback, filtering, sorting, themes, custom CSP protocol handling, and automated E2E testing using Playwright.
+Desktop multimedia player built with Electron featuring media playback, filtering, sorting, themes, OpenAI voice commands, AI speech feedback, custom CSP protocol handling, and automated E2E testing using Playwright.
 
 ---
 
@@ -16,6 +16,10 @@ Desktop multimedia player built with Electron featuring media playback, filterin
 - Content Security Policy (CSP)
 - Save/load media library to JSON
 - Playwright E2E tests
+- Voice command recognition using OpenAI Whisper
+- AI text-to-speech voice feedback
+- Background speech playback inside Electron
+- Voice-controlled media navigation
 
 ---
 
@@ -26,6 +30,11 @@ Desktop multimedia player built with Electron featuring media playback, filterin
 - HTML/CSS
 - Node.js
 - Playwright
+- OpenAI API
+- Whisper-1
+- GPT-4o Mini TTS
+- Electron IPC
+- SoX
 
 ---
 
@@ -47,6 +56,35 @@ Install dependencies:
 
 ```bash
 npm install
+```
+
+Create an `apiKey.txt` file in the project root and paste your OpenAI API key inside.
+
+Example:
+
+```text
+sk-xxxxxxxxxxxxxxxx
+```
+
+---
+
+## Requirements
+
+The following tools must be installed and available in PATH:
+
+- Node.js
+- npm
+- SoX
+
+### SoX Installation
+
+Windows:
+https://sourceforge.net/projects/sox/files/latest/download
+
+Verify installation:
+
+```bash
+sox --version
 ```
 
 ---
@@ -74,6 +112,24 @@ Create distributables:
 ```bash
 npm run make
 ```
+
+---
+
+## Voice Commands
+
+The application supports voice control using OpenAI Whisper speech recognition.
+
+Available commands:
+
+- play
+- pause
+- next
+- back
+- change theme
+- dark
+- light
+
+Voice feedback is generated using OpenAI Text-to-Speech and played directly inside Electron.
 
 ---
 
@@ -108,10 +164,25 @@ npx playwright show-report
 ├── settings_dark.css
 ├── addMedia_light.css
 ├── addMedia_dark.css
+├── voice.wav
+├── MediaLibraryAppSave.json
+├── apiKey.txt
 ├── Folder_for_test/
 ├── playwright-report/
 └── package.json
 ```
+
+---
+
+## Voice Assistant Architecture
+
+1. User records voice command
+2. Audio recorded with SoX
+3. Audio transcribed using OpenAI Whisper
+4. Command processed in Electron main process
+5. Media action executed via IPC
+6. AI voice feedback generated using OpenAI TTS
+7. Speech played inside Electron renderer
 
 ---
 
@@ -123,6 +194,8 @@ The application uses:
 - Custom `app://` Electron protocol
 - Context isolation via preload scripts
 - IPC communication between renderer and main process
+- Secure OpenAI API communication
+- Isolated speech playback through Electron IPC
 
 ---
 
